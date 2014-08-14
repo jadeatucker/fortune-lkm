@@ -37,8 +37,8 @@ ssize_t fortune_read(struct file *filep, char __user *buf, size_t count, loff_t 
 
 static struct proc_dir_entry *proc_entry;
 static struct file_operations proc_fops = {
-  read: fortune_read
-  write: fortune_write
+  read: fortune_read,
+  write: fortune_write,
   owner: THIS_MODULE
 };
 
