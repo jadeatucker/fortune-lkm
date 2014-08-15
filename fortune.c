@@ -1,10 +1,8 @@
 /*
- * fortune - Fortune Cookie Linux Kernel Module
+ * /proc/fortune - Fortune Cookie Linux Kernel Module
  *
- * Copied from online article by M. Tim Jones <mtj@mtjones.com>
+ * Copied from an online article by M. Tim Jones <mtj@mtjones.com>
  * (http://www.ibm.com/developerworks/linux/library/l-proc/index.html)
- *
- *   docs/l-proc-pdf.pdf 
  *
  * CHANGELOG:
  *  Updated for kernel v3.10 - Jade Tucker <jadeatucker@gmail.com>
@@ -39,14 +37,14 @@ ssize_t fortune_read(struct file *filep, char __user *buf,
 
 static struct proc_dir_entry *proc_entry;
 static struct file_operations proc_fops = {
-  read: fortune_read,
+  read : fortune_read,
   write: fortune_write,
   owner: THIS_MODULE
 };
 
-static char *cookie_pot;
-static int cookie_index;
-static int next_fortune;
+static char *cookie_pot;  // Storage for our fortunes
+static int cookie_index;  // Index for the next cookie to add
+static int next_fortune;  // The start of the next cookie to be read
 
 int init_fortune_module(void) {
 
@@ -108,6 +106,7 @@ ssize_t fortune_read(struct file *filep, char __user *buf,
   }
   *offp = 1;
 
+  // Wrap around when we get to the end
   if(next_fortune >= cookie_index) {
     next_fortune = 0;
   }
