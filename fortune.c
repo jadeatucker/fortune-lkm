@@ -32,8 +32,10 @@ MODULE_AUTHOR("M. Tim Jones");
 
 #define MAX_COOKIE_LENGTH PAGE_SIZE
 
-ssize_t fortune_write(struct file *, const char __user *, size_t, loff_t *);
-ssize_t fortune_read(struct file *filep, char __user *buf, size_t count, loff_t *offp);
+ssize_t fortune_write(struct file *filep, const char __user *buf,
+    size_t len, loff_t *offp);
+ssize_t fortune_read(struct file *filep, char __user *buf,
+    size_t count, loff_t *offp);
 
 static struct proc_dir_entry *proc_entry;
 static struct file_operations proc_fops = {
@@ -53,7 +55,7 @@ int init_fortune_module(void) {
     return -ENOMEM;
   }
 
-  proc_entry = proc_create("fortune", 0644, NULL, &proc_fops);
+  proc_entry = proc_create("fortune", 0666, NULL, &proc_fops);
   if(proc_entry == NULL) {
     vfree(cookie_pot);
     printk(KERN_INFO "fortune: Couldn't create proc entry.\n");
@@ -76,8 +78,8 @@ void cleanup_fortune_module(void) {
 module_init(init_fortune_module);
 module_exit(cleanup_fortune_module);
 
-ssize_t fortune_write(struct file *filep, const char __user *buff,
-    size_t len, loff_t *data) {
+ssize_t fortune_write(struct file *filep, const char __user *buf,
+    size_t len, loff_t *offp) {
 
   int avail = (MAX_COOKIE_LENGTH - cookie_index) + 1;
 
@@ -85,7 +87,7 @@ ssize_t fortune_write(struct file *filep, const char __user *buff,
     return -ENOSPC;
   }
 
-  if(copy_from_user(&cookie_pot[cookie_index], buff, len)) {
+  if(copy_from_user(&cookie_pot[cookie_index], buf, len)) {
     return -EFAULT;
   }
 
@@ -99,6 +101,12 @@ ssize_t fortune_read(struct file *filep, char __user *buf,
     size_t count, loff_t *offp) {
 
   int len;
+
+  // subsequent reads send EOF
+  if(*offp > 0) {
+    return 0;
+  }
+  *offp = 1;
 
   if(next_fortune >= cookie_index) {
     next_fortune = 0;
